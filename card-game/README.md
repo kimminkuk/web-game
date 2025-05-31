@@ -26,3 +26,4 @@
   - node js (.mjs 사용)
   - bootstrap으로 grid 조작
   - document flipped 조작
+  - setTimeout, callback

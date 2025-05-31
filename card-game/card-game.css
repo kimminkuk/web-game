@@ -6,6 +6,11 @@
     padding: 20px;
 }
 
+#card-make-position.disabled {
+    pointer-events: none; /* 클릭 이벤트 비활성화 */
+    cursor: not-allowed; /* 마우스 포인터 금지 표시 */
+}
+
 .card {
     perspective: 1000px;
 }

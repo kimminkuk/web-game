@@ -1,3 +1,5 @@
+const G_CARD_WAIT_TIME = 500; // 카드 뒤집기 대기 시간 (밀리초)
+const G_CARD_WAIT_TIME_AFTER_FLIP = 3000; // 카드 뒤집기 후 대기 시간 (밀리초)
 async function fetchEmojis(count) {
     try {
         const response = await fetch('/api/emojis');
@@ -29,6 +31,7 @@ function displayEmojis(emojis) {
         const card = document.createElement('div');
         card.className = 'card';
 
+
         // Card Inner Class 추가
         const cardInner = document.createElement('div');
         cardInner.className = 'card-inner';
@@ -56,27 +59,38 @@ function displayEmojis(emojis) {
         cards.push(card); // 카드 배열에 추가
     });
 
-    // 카드들을 순차적으로 뒤집기
-    filpCardsSequentially(cards, true, () => {
+    // 카드 하나 뒤집기 테스트
+    // setTimeout(() => {
+    //     if (cards.length > 0) {
+    //         //cards[0]의 cardInner 요소를 가져오기
+    //         const cardInner = cards[0].querySelector('.card-inner');
+    //         cardInner.classList.toggle('flipped'); // 첫 번째 카드 뒤집기
+    //     }        
+    // }, 500);
+
+    // 카드들을 순차적으로 뒤집을 때, 카드 컨테이너 비활성화
+    container.classList.add('disabled');
+
+    flipCardsSequentially(cards, () => {
         setTimeout(() => {
-            filpCardsSequentially(cards, false);
-        }, cards.length * 500);
+            flipCardsSequentially(cards, () => {
+                container.classList.remove('disabled'); // 카드 컨테이너 활성화
+            });
+        }, G_CARD_WAIT_TIME_AFTER_FLIP);
     });
 }
 
-function filpCardsSequentially(cards, flipToFront, callback) {
-    cards.forEach((cardInner, index) => {
+function flipCardsSequentially(cards, callback) {
+    cards.forEach((card, index) => {
         setTimeout(() => {
-            if (flipToFront) {
-                cardInner.classList.remove('flipped'); // 카드 앞면으로 뒤집기
-            } else {
-                cardInner.classList.add('flipped'); // 카드 뒷면으로 뒤집기
-            }
+            const cardInner = card.querySelector('.card-inner'); // 현재 카드의 .card-inner 요소 가져오기
+            cardInner.classList.toggle('flipped'); // 카드 뒤집기
 
             if (index === cards.length - 1 && callback) {
-                callback(); // 마지막 카드 뒤집기 후 콜백 호출
+                // 마지막 카드 뒤집기 후 콜백 실행
+                callback();
             }
-        }, index * 500);
+        }, index * G_CARD_WAIT_TIME); // 0.5초 간격으로 실행
     });
 }
 

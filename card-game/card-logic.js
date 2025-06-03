@@ -1,11 +1,30 @@
-const G_CARD_WAIT_TIME = 500; // 카드 뒤집기 대기 시간 (밀리초)
-const G_CARD_WAIT_TIME_AFTER_FLIP = 3000; // 카드 뒤집기 후 대기 시간 (밀리초)
-const G_CARD_MATCHED_FAIL_TIME = 1000
-const EASY = 1;
-const MEDIUM = 2;
-const HARD = 3;
-let G_LIFE = 3; // 생명 초기화
-let G_GAME_LEVEL = EASY;
+const GameState = {
+    level: 'EASY', // EASY, MEDIUM, HARD
+    life: 3,
+    hint: 3,
+    cardEmoji: 8, // 이모티콘 개수 (레벨에 따라 다름)
+    cardWaitTime: 500, // 카드 뒤집기 대기 시간 (밀리초)
+    cardWaitTimeAfterFlip: 3000, // 카드 뒤집기 후 대기 시간 (밀리초)
+    cardMatchedFailTime: 1000, // 카드 매칭 실패 시 대기 시간 (밀리초)
+    lifeCounts: { // LEVEL, LIFE COUNT
+        EMPTY: 0,
+        EASY: 3,
+        MEDIUM: 4,
+        HARD: 5
+    }, 
+    hintCounts: {
+        EMPTY: 0,
+        EASY: 3,
+        MEDIUM: 5,
+        HARD: 7
+    },
+    cardEmojiCounts: {
+        EASY: 8, // Easy 레벨 이모티콘 개수
+        MEDIUM: 16, // Medium 레벨 이모티콘 개수
+        HARD: 32 // Hard 레벨 이모티콘 개수
+    }
+};
+
 async function fetchEmojis(count) {
     try {
         const response = await fetch('/api/emojis');
@@ -93,12 +112,11 @@ function displayEmojis(emojis) {
                     console.log("[DEBUG] 첫 번째 카드:", firstCard.emoji, "두 번째 카드:", secondCard.emoji);
                     firstCard = null; // 선택 초기화
                     secondCard = null; // 선택 초기화                    
-                    console.log("[DEBUG] 두 카드가 동일합니다. 매칭 성공!");                    
-                    console.log("[DEBUG] 카드 클리어: ", firstCard.cardInner, secondCard.cardInner);
+                    console.log("[DEBUG] 두 카드가 동일합니다. 매칭 성공!");
                 } else {
                     // 두 카드가 동일하지 않은 경우
                     setTimeout(() => {
-                        console.log("[DEBUG] 카드 뒤집기 해제: ", firstCard.cardInner, secondCard.cardInner);
+                        console.log("[DEBUG] 두 카드 정보: ", firstCard.cardInner, secondCard.cardInner);
                         firstCard.cardInner.classList.remove('flipped', 'Select-1'); // 첫 번째 카드 뒤집기 해제
                         secondCard.cardInner.classList.remove('flipped', 'Select-2'); // 두 번째 카드 뒤집기 해제
                         console.log("[DEBUG] 두 카드가 동일하지 않습니다. 매칭 실패!");
@@ -106,7 +124,7 @@ function displayEmojis(emojis) {
                         firstCard = null; // 선택 초기화
                         secondCard = null; // 선택 초기화                                                
                         decreaseLife(); // 생명 감소
-                    }, G_CARD_MATCHED_FAIL_TIME);
+                    }, GameState.cardMatchedFailTime); // 카드 매칭 실패 시 대기 시간
                 }
             }
 
@@ -124,7 +142,7 @@ function displayEmojis(emojis) {
             flipCardsSequentially(cards, () => {
                 container.classList.remove('disabled'); // 카드 컨테이너 활성화
             });
-        }, G_CARD_WAIT_TIME_AFTER_FLIP);
+        }, GameState.cardWaitTimeAfterFlip);
     });
 }
 
@@ -138,7 +156,7 @@ function flipCardsSequentially(cards, callback) {
                 // 마지막 카드 뒤집기 후 콜백 실행
                 callback();
             }
-        }, index * G_CARD_WAIT_TIME); // 0.5초 간격으로 실행
+        }, index * GameState.cardWaitTime); // 0.5초 간격으로 실행
     });
 }
 
@@ -157,41 +175,29 @@ function oneCardFlippedTest(cards) {
 }
 
 function increaseLife() {
-    if (G_GAME_LEVEL === EASY && G_LIFE < 3) {
-        G_LIFE++;
-        console.log("[DEBUG] Life increased to:", G_LIFE);
-    } else if (G_GAME_LEVEL === MEDIUM && G_LIFE < 4) {
-        G_LIFE++;
-        console.log("[DEBUG] Life increased to:", G_LIFE);
-    } else if (G_GAME_LEVEL === HARD && G_LIFE < 5) {
-        G_LIFE++;
-        console.log("[DEBUG] Life increased to:", G_LIFE);
-    }
-    else {
+    const maxLife = GameState.lifeCounts[GameState.level];
+    if (GameState.life < maxLife) {
+        GameState.life++;
+        appendLifeContainer(document.getElementById('life-container'));
+        console.log("[DEBUG] Life increased to:", GameState.life);
+    } else {
         console.log("[DEBUG] Life cannot be increased further at this level.");
     }
-    appendLifeContainer(document.getElementById('life-container'));
 }
 
 function decreaseLife() {
-    if (G_GAME_LEVEL === EASY && G_LIFE > 0) {
-        G_LIFE--;
-        console.log("[DEBUG] Life decreased to:", G_LIFE);
-    } else if (G_GAME_LEVEL === MEDIUM && G_LIFE > 0) {
-        G_LIFE--;
-        console.log("[DEBUG] Life decreased to:", G_LIFE);
-    } else if (G_GAME_LEVEL === HARD && G_LIFE > 0) {
-        G_LIFE--;
-        console.log("[DEBUG] Life decreased to:", G_LIFE);
-    }
-    if (G_LIFE <= 0) {
-        console.log("[DEBUG] Game Over! No more lives left.");
-        // 게임 오버 처리 로직 추가
-        alert("Game Over! No more lives left.");
-        // 게임 초기화 또는 다시 시작 로직 추가
-        initializeGame();
-    } else {
-        popLifeContainer(document.getElementById('life-container'));
+    if (GameState.life > 0) {
+        GameState.life--;
+        console.log("[DEBUG] Life decreased to:", GameState.life);
+        if (GameState.life <= 0) {
+            console.log("[DEBUG] Game Over! No more lives left.");
+            // 게임 오버 처리 로직 추가
+            alert("Game Over! No more lives left.");
+            // 게임 초기화 또는 다시 시작 로직 추가
+            initializeGame();
+        } else {
+            popLifeContainer(document.getElementById('life-container'));
+        }
     }
 }
 
@@ -215,41 +221,79 @@ function appendLifeContainer(lifeContainer) {
 function makeLifeContainer() {
     const lifeContainer = document.getElementById('life-container');
     lifeContainer.innerHTML = ''; // Clear Previous Content
-    for (let i = 0; i < G_LIFE; i++) {
+    for (let i = 0; i < GameState.life; i++) {
         appendLifeContainer(lifeContainer);
     }
+    console.log("[DEBUG] Life container created with", GameState.life, "lives.");
+}
+
+function popHintContainer(hintContainer) {
+    if (hintContainer.children.length === 0) {
+        console.log("[DEBUG] No hint icons to remove");
+        return; // 더 이상 제거할 힌트 아이콘이 없음
+    }
+    hintContainer.removeChild(hintContainer.lastChild);
+    console.log("[DEBUG] Hint icon removed");
+}
+
+function appendHintContainer(hintContainer) {
+    const HintIcon = document.createElement('span');
+    HintIcon.className = 'hint-icon';
+    HintIcon.textContent = '💡'; // 힌트 아이콘
+    hintContainer.appendChild(HintIcon);
+    console.log("[DEBUG] Hint icon appended");
+}
+
+function makeHintContainer() {
+    const makeHintContainer = document.getElementById('hint-container');
+    makeHintContainer.innerHTML = ''; // Clear Previous Content
+    for (let i = 0; i < GameState.hint; i++) {
+        appendHintContainer(makeHintContainer);
+    }
+    console.log("[DEBUG] Hint container created with", GameState.hint, "hints.");
 }
 
 function easy() {
     console.log("Easy level selected");
-    G_LIFE = 3; // 생명 초기화
-    G_GAME_LEVEL = EASY; // 게임 레벨 설정
+    setLevel('EASY'); // Easy 레벨로 초기화
     makeLifeContainer(); // 생명 아이콘 생성
-    fetchEmojis(8).then(displayEmojis);
+    makeHintContainer(); // 힌트 아이콘 생성
+    fetchEmojis(GameState.cardEmoji).then(displayEmojis);
     
 }
 
 function medium() {
     console.log("Medium level selected");
-    G_LIFE = 4; // 생명 초기화
-    G_GAME_LEVEL = MEDIUM; // 게임 레벨 설정
+    setLevel('MEDIUM'); // Medium 레벨로 초기화
     makeLifeContainer(); // 생명 아이콘 생성
-    fetchEmojis(16).then(displayEmojis);
+    makeHintContainer(); // 힌트 아이콘 생성
+    fetchEmojis(GameState.cardEmoji).then(displayEmojis);
 }
 
 function hard() {
     console.log("Hard level selected");
-    G_LIFE = 5; // 생명 초기화
-    G_GAME_LEVEL = HARD; // 게임 레벨 설정
+    setLevel('HARD'); // Hard 레벨로 초기화
     makeLifeContainer(); // 생명 아이콘 생성
-    fetchEmojis(32).then(displayEmojis);
+    makeHintContainer(); // 힌트 아이콘 생성
+    fetchEmojis(GameState.cardEmoji).then(displayEmojis);
 }
 
 function initializeGame() {
-    G_LIFE = 3; // 생명 초기화
-    G_GAME_LEVEL = EASY; // 게임 레벨 초기화
+    setLevel('EASY'); // Easy 레벨로 초기화
     const container = document.getElementById('card-make-position');
     container.innerHTML = ''; // Clear Previous Content
     makeLifeContainer(); // 생명 아이콘 생성
+    makeHintContainer(); // 힌트 아이콘 생성
     console.log("[DEBUG] Game initialized. Life reset to 0 and level set to Easy.");
+}
+
+function setLevel(level) {
+    GameState.level = level;
+    GameState.life = GameState.lifeCounts[level];
+    GameState.hint = GameState.hintCounts[level];
+    GameState.cardEmoji = GameState.cardEmojiCounts[level];
+    console.log("[DEBUG] LEVEL: ", GameState.level);
+    console.log("[DEBUG] LIFE: ", GameState.life);
+    console.log("[DEBUG] HINT: ", GameState.hint);
+    console.log("[DEBUG] CARD EMOJI: ", GameState.cardEmoji);
 }

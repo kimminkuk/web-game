@@ -22,7 +22,8 @@
   - Hint 추가
     - easy 3개, medium 6개, hard 9개
     - 각각 Hint 아이콘 클릭 시, 임의의 뒷면 카드가 3초 동안 앞면으로 뒤집힌다.
-    
+  - Global 변수들 삭제 후, State 객체로 변경: ok
+  - 화면 3분할 후, Life, Hint가 중앙으로 내려오는 버그 수정 필요:
 # web-game
   - Easy 16, Medium 32, Hard 64 이미지 찾기
   - Life 3개

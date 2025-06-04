@@ -99,3 +99,7 @@
 .row {
     align-items: center;
 }
+
+.hint-icon {
+    cursor: pointer;
+}

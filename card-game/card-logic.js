@@ -183,15 +183,15 @@ function oneCardFlippedRemoveForHint(cardInner) {
 
 function oneCardFlippedForHint(cardInner) {
     // 지정된 카드 하나 뒤집기
+    cardInner.classList.toggle('flipped'); // 카드 뒤집기
     setTimeout(() => {
         if (cardInner) {
-            cardInner.classList.toggle('flipped'); // 카드 뒤집기
-            console.log("[DEBUG] 지정된 카드가 뒤집혔습니다.");
+            cardInner.classList.remove('flipped'); // 카드 뒤집기 해제
+            console.log("[DEBUG] 지정된 카드의 뒤집기 해제했습니다.");
         } else {
             console.log("[DEBUG] 지정된 카드가 없습니다.");
         }
-    }
-    , GameState.cardWaitTime); // 지정된 카드 뒤집기 대기 시간
+    }, GameState.cardWaitTime); // 카드 뒤집기 후 대기 시간
 }
 
 function increaseLife() {
@@ -279,8 +279,7 @@ function appendHintContainer(hintContainer) {
             if (availableCards.length > 0) {
                 const randomCard = availableCards[Math.floor(Math.random() * availableCards.length)];
                 const cardInner = randomCard.querySelector('.card-inner');
-                oneCardFlippedForHint(cardInner); // 지정된 카드 하나 뒤집기
-                oneCardFlippedRemoveForHint(cardInner); // 카드 다시 뒤집기
+                oneCardFlippedForHint(cardInner); // 지정된 카드 하나 뒤집고, 다시 뒤집기
                 console.log("[DEBUG] Random card flipped:", randomCard);
             } else {
                 console.log("[DEBUG] No available cards to flip for hint.");

@@ -1,2 +1,2 @@
 # web-game
-  - Card Game
+  - Card Game 100%

@@ -10,30 +10,32 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <div id="game-difficulty" class="d-flex justify-content-center gap-3 mt-4">        
-        <button class="btn btn-primary" onclick="easy()">Easy</button>
-        <button class="btn btn-warning" onclick="medium()">Medium</button>
-        <button class="btn btn-danger" onclick="hard()">Hard</button>
-    </div>
-
-    <!--화면을 3분할 -->
-    <div class="container mt-5 d-flex">
-        <!--Left Side, Life-->
-        <div class="col-2 bg-light d-flex flex-column align-items-center justify-content-center">
-            <h5>Life</h5>
-            <div id="life-container" class="d-flex gap-2"></div>
+    <div class="container mt-2">
+        <div class="row mt-2">
+            <!--Left 2-->
+            <div id="left-game-difficulty-monitor" class="col-2 d-flex">
+                <div id="life-container" class="col-2 d-flex gap-2 align-items-center"></div>
+            </div>             
+            <!--Mid 8-->
+            <div id="mid-game-difficulty-monitor" class="col-8 d-flex justify-content-start align-items-center">        
+                <button class="btn btn-primary" onclick="easy()">Easy</button>
+                <button class="btn btn-warning" onclick="medium()">Medium</button>
+                <button class="btn btn-danger" onclick="hard()">Hard</button>
+            </div>  
+            <!--Right 2-->
+            <div id="right-game-difficulty-monitor" class="col-2 d-flex">
+                <div id="hint-container" class="col-2 d-flex gap-2 align-items-center"></div>        
+            </div>
         </div>
-
-        <!--Mid, Card-->
-        <div id=card-make-position class="col-8"></div>
-
-        <!--Right Side, Hint-->
-        <div class="col-2 bg-light d-flex flex-column align-items-center justify-content-center">
-            <h5>Hint</h5>
-            <div id="hint-container" class="d-flex gap-2"></div>
-        </div>
-    </div>
-                    
+        <div class="row mt-2">
+            <!--Left, Card-->
+            <div id="left-container" class="col-2 d-flex gap-2 align-items-center"></div>
+            <!--Mid, Card-->
+            <div id=card-make-position class="col-8 align-items-center"></div>
+            <!--Right, Card-->
+            <div id="right-container" class="col-2 d-flex gap-2 align-items-center"></div>
+        </div>        
+    </div>          
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="./card-logic.js"></script>

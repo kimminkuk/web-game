@@ -15,13 +15,13 @@ const GameState = {
     hintCounts: {
         EMPTY: 0,
         EASY: 3,
-        MEDIUM: 5,
-        HARD: 7
+        MEDIUM: 4,
+        HARD: 5
     },
     cardEmojiCounts: {
         EASY: 8, // Easy 레벨 이모티콘 개수
         MEDIUM: 16, // Medium 레벨 이모티콘 개수
-        HARD: 32 // Hard 레벨 이모티콘 개수
+        HARD: 24 // Hard 레벨 이모티콘 개수
     }
 };
 
@@ -174,6 +174,26 @@ function oneCardFlippedTest(cards) {
     }, 500);
 }
 
+function oneCardFlippedRemoveForHint(cardInner) {
+    if (cardInner) {
+        cardInner.classList.remove('flipped');
+        console.log("[DEBUG] 지정된 카드의 뒤집기 해제했습니다.");
+    }
+}
+
+function oneCardFlippedForHint(cardInner) {
+    // 지정된 카드 하나 뒤집기
+    setTimeout(() => {
+        if (cardInner) {
+            cardInner.classList.toggle('flipped'); // 카드 뒤집기
+            console.log("[DEBUG] 지정된 카드가 뒤집혔습니다.");
+        } else {
+            console.log("[DEBUG] 지정된 카드가 없습니다.");
+        }
+    }
+    , GameState.cardWaitTime); // 지정된 카드 뒤집기 대기 시간
+}
+
 function increaseLife() {
     const maxLife = GameState.lifeCounts[GameState.level];
     if (GameState.life < maxLife) {
@@ -242,6 +262,34 @@ function appendHintContainer(hintContainer) {
     HintIcon.textContent = '💡'; // 힌트 아이콘
     hintContainer.appendChild(HintIcon);
     console.log("[DEBUG] Hint icon appended");
+
+    // 힌트 아이콘 클릭 이벤트 추가
+    HintIcon.addEventListener('click', () => {
+        if (GameState.hint > 0) {
+            GameState.hint--;
+            popHintContainer(hintContainer);
+            console.log("[DEBUG] Hint used. Remaining hints:", GameState.hint);
+            // 힌트 사용 로직 추가 (예: 카드 뒤집기, 매칭된 카드 표시 등)
+            // matched, select-1의 클래스가 없는 cards를 랜덤하게 찾아서 하나 뒤집기
+            const cards = document.querySelectorAll('.card');
+            const availableCards = Array.from(cards).filter(card => {
+                const cardInner = card.querySelector('.card-inner');
+                return !cardInner.classList.contains('matched') && !cardInner.classList.contains('Select-1');
+            });
+            if (availableCards.length > 0) {
+                const randomCard = availableCards[Math.floor(Math.random() * availableCards.length)];
+                const cardInner = randomCard.querySelector('.card-inner');
+                oneCardFlippedForHint(cardInner); // 지정된 카드 하나 뒤집기
+                oneCardFlippedRemoveForHint(cardInner); // 카드 다시 뒤집기
+                console.log("[DEBUG] Random card flipped:", randomCard);
+            } else {
+                console.log("[DEBUG] No available cards to flip for hint.");
+            }
+        } else {
+            console.log("[DEBUG] No hints left to use.");
+        }
+    });
+
 }
 
 function makeHintContainer() {

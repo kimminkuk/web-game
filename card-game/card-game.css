@@ -13,12 +13,17 @@
 
 .card {
     perspective: 1000px;
+    width: 100px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .card-inner {
     position: relative;
-    width: 100px;
-    height: 100px;
+    width: inherit;
+    height: inherit;
     transform-style: preserve-3d;
     transition: transform 0.6s;
     cursor: pointer;
@@ -71,4 +76,26 @@
 
 #life-container {
     margin-top: 10px;
+}
+
+.container {
+    /* height: 100vh; */
+    max-width: 100%; /* container의 너비를 화면 전체로 설정 */
+}
+
+.col-2 {
+    flex-shrink: 0; /* 크기가 줄어들지 않도록 설정 */
+}
+
+#card-make-position {
+    overflow-y: auto; /* 카드 영역 스크롤 가능 */
+    top: 50px;
+}
+
+#game-difficulty {
+    margin-bottom: 0;;
+}
+
+.row {
+    align-items: center;
 }

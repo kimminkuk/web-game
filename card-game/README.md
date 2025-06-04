@@ -4,6 +4,7 @@
     - 카드1, 카드2 불 일치 시, decreaseLife: ok
     - start 버튼 실행 시, 왼쪽 화면이 중앙으로 이동된다. div container를 공유해서그런듯
       - row를 제거 하자.
+      - 뭔가 이상한데... 일단 이 정도로 마무리, 너무 구분하는것도 웃김
   - Game 시작, 끝
     - 시작은 easy, medium, hard 버튼 누르면 시작: ok
     - 끝은 라이프 3개 다쓰면 종료: ok
@@ -22,10 +23,12 @@
   - Hint 추가
     - easy 3개, medium 6개, hard 9개
     - 각각 Hint 아이콘 클릭 시, 임의의 뒷면 카드가 3초 동안 앞면으로 뒤집힌다.
+      - 카드를 뒤집고, 다시 원상복귀가 안되는 버그 발생, remove 헀는데 왜지..?
   - Global 변수들 삭제 후, State 객체로 변경: ok
-  - 화면 3분할 후, Life, Hint가 중앙으로 내려오는 버그 수정 필요:
+  - 화면 3분할 후, Life, Hint가 중앙으로 내려오는 버그 수정 필요: ok
+    - 그냥 Life, Hint를 전부 화면 위로 올리기로 결정, 그게 더 깔끔
 # web-game
-  - Easy 16, Medium 32, Hard 64 이미지 찾기
+  - Easy 16, Medium 32, Hard 48 이미지 찾기
   - Life 3개
   - 이모지는 API KEY로 가져오기
 

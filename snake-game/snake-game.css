@@ -1,0 +1,48 @@
+/* 게임 보드 스타일 */
+.game-board {
+    display: grid;
+    background-color: #f8f9fa;
+    border: 2px solid #000;
+}
+
+/* Easy 난이도 */
+.game-board.easy {
+    grid-template-rows: repeat(20, 20px);
+    grid-template-columns: repeat(20, 20px);
+}
+
+/* Medium 난이도 */
+.game-board.medium {
+    grid-template-rows: repeat(18, 20px);
+    grid-template-columns: repeat(18, 20px);
+}
+
+/* Hard 난이도 */
+.game-board.hard {
+    grid-template-rows: repeat(15, 20px);
+    grid-template-columns: repeat(15, 20px);
+}
+
+#game-canvas {
+    display: grid;
+    grid-template-rows: repeat(20, 1fr); /* 20개 행 */
+    grid-template-columns: repeat(20, 1fr); /* 20개 열 */
+    width: 400px;
+    height: 400px;
+    border: 2px solid #000;
+    background-color: white;
+}
+
+.grid-cell {
+    border: 1px solid #ddd;
+    background-color: white;
+}
+
+.snake-head {
+    background-color: green;
+    border-radius: 50%;
+}
+
+.snake-body {
+    background-color: darkgreen;
+}

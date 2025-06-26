@@ -1,3 +1,3 @@
 # web-game
   ## Card Game 100%
-  ## Snake Game 20%
+  ## Snake Game 50%

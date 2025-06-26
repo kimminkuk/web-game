@@ -46,3 +46,9 @@
 .snake-body {
     background-color: darkgreen;
 }
+
+
+.mouse {
+    background-color: lightyellow;
+    /*border-radius: 50%;*/
+}

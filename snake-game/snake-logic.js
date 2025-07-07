@@ -11,6 +11,7 @@ const GameState = {
 const SnakeState = {
     direction: 'RIGHT', // RIGHT, LEFT, UP, DOWN
     nextDirection: 'RIGHT',
+    prevDirection: 'RIGHT', // 이전 방향을 저장한다.
     head: [{ x: 3, y: 0 }], // Initial position of the snake head, Randomly placed
     body: [{ x: 2, y: 0 }, { x: 1, y: 0 }], // Initial position of the snake, Randomly placed
     length: 3, // Initial length of the snake
@@ -112,8 +113,8 @@ function initializedMousePosition() {
         isSnakePosition = snakePositions.some(pos => pos.x === colPosition && pos.y === rowPosition);
     }
 
-    MouseInitialPosition.position = { x: colPosition, y: rowPosition };
-    console.log(`[initializedMousePosition] Mouse initial position set to: ${JSON.stringify(MouseInitialPosition.position)}`);
+    MouseState.position = { x: colPosition, y: rowPosition };
+    console.log(`[initializedMousePosition] Mouse initial position set to: ${JSON.stringify(MouseState.position)}`);
 }
 
 function initializedSnakePosition() {
@@ -204,38 +205,147 @@ function moveMouse() {
 
 }
 
+function prohibitSnakeNextMove(prevDirection, curDirection) {
+    // Snake의 prevDirection가 Right면, 다음 Move에서 Left는 불가능하게 한다.
+    // 만약 prevDirection가 Right인데, curDirection이 Left이면 curDirection을 Right로 변경한다.
+    if (prevDirection === 'RIGHT' && curDirection === 'LEFT') {
+        console.error('[prohibitSnakeNextMove] Snake cannot move LEFT after moving RIGHT');
+        SnakeState.direction = 'RIGHT'; // 다음 Move에서 Right로 이동하도록 한다.
+        return 'RIGHT'; // 다음 Move에서 Right로 이동하도록 한다.
+    }
+    // 만약 prevDirection가 Left면, 다음 Move에서 Right는 불가능하게 한다.
+    if (prevDirection === 'LEFT' && curDirection === 'RIGHT') {
+        console.error('[prohibitSnakeNextMove] Snake cannot move RIGHT after moving LEFT');
+        SnakeState.direction = 'LEFT'; // 다음 Move에서 Left로 이동하도록 한다.
+        return 'LEFT'; // 다음 Move에서 Left로 이동하도록 한다.
+    }
+    // 만약 prevDirection가 Up면, 다음 Move에서 Down은 불가능하게 한다
+    if (prevDirection === 'UP' && curDirection === 'DOWN') {
+        console.error('[prohibitSnakeNextMove] Snake cannot move DOWN after moving UP');
+        SnakeState.direction = 'UP'; // 다음 Move에서 Up로 이동하도록 한다.
+        return 'UP'; // 다음 Move에서 Up로 이동하도록 한다.
+    }
+    // 만약 prevDirection가 Down면, 다음 Move에서 Up은 불가능하게 한다
+    if (prevDirection === 'DOWN' && curDirection === 'UP') {
+        console.error('[prohibitSnakeNextMove] Snake cannot move UP after moving DOWN');
+        SnakeState.direction = 'DOWN'; // 다음 Move에서 Down로 이동하도록 한다.
+        return 'DOWN'; // 다음 Move에서 Down로 이동하도록 한다.
+    }
+}  
+
+function checkSnakeHeadAndBodyCollision(nextHeadPos, direction) {
+    switch (direction) {
+        case 'UP':
+            for (let i = 0; i < SnakeState.body.length; i++) {
+                if (SnakeState.body[i].x === nextHeadPos.x && SnakeState.body[i].y === nextHeadPos.y - 1) {
+                    console.error('[checkSnakeHeadAndBodyCollision] Up direction collision detected');
+                    return false; // Snake가 몸쪽으로 이동하는 경우, 움직이지 않는다.
+                }
+            }
+            break;
+        case 'DOWN':
+            for (let i = 0; i < SnakeState.body.length; i++) {
+                if (SnakeState.body[i].x === nextHeadPos.x && SnakeState.body[i].y === nextHeadPos.y + 1) {
+                    console.error('[checkSnakeHeadAndBodyCollision] Down direction collision detected');
+                    return false; // Snake가 몸쪽으로 이동하는 경우, 움직이지 않는다.
+                }
+            }
+            break;
+        case 'LEFT':
+            for (let i = 0; i < SnakeState.body.length; i++) {
+                if (SnakeState.body[i].x === nextHeadPos.x - 1 && SnakeState.body[i].y === nextHeadPos.y) {
+                    console.error('[checkSnakeHeadAndBodyCollision] Left direction collision detected');
+                    return false; // Snake가 몸쪽으로 이동하는 경우, 움직이지 않는다.
+                }
+            }
+            break;
+        case 'RIGHT':
+            for (let i = 0; i < SnakeState.body.length; i++) {
+                if (SnakeState.body[i].x === nextHeadPos.x + 1 && SnakeState.body[i].y === nextHeadPos.y) {
+                    console.error('[checkSnakeHeadAndBodyCollision] Right direction collision detected');
+                    return false; // Snake가 몸쪽으로 이동하는 경우, 움직이지 않는다.
+                }
+            }
+            break;
+        default:
+            console.error('[checkSnakeHeadAndBodyCollision] Invalid snake direction');
+            return false; // Snake가 몸쪽으로 이동하는 경우, 움직이지 않는다.
+    }
+
+    return true; // Snake가 몸쪽으로 이동하지 않는 경우, 움직일 수 있다.
+}
+
+function setSnakePrevDirection(direction) {
+    // Snake의 이전 방향을 설정한다.
+    SnakeState.prevDirection = direction;
+}
+
+function setNextHeadPositionInPrevStateDirection(direction) {
+    // Snake의 다음 Head 위치를 설정한다.
+    // Snake의 방향에 따라 다음 Head 위치를 계산한다.
+    switch  (direction) {
+        case 'UP':
+            return { x: SnakeState.head[0].x, y: SnakeState.head[0].y - 1 };
+        case 'DOWN':
+            return { x: SnakeState.head[0].x, y: SnakeState.head[0].y + 1 };
+        case 'LEFT':
+            return { x: SnakeState.head[0].x - 1, y: SnakeState.head[0].y };
+        case 'RIGHT':
+            return { x: SnakeState.head[0].x + 1, y: SnakeState.head[0].y };
+        default:
+            console.error('[setNextHeadPostion] Invalid snake direction');
+            return null; // 잘못된 방향인 경우, null을 반환한다.
+    }
+}
 function moveSnake() {
     const head = SnakeState.head[0]; 
     let nextHead;
     let nextBody;
 
+    prohibitSnakeNextMove(SnakeState.prevDirection, SnakeState.direction); // Snake의 다음 Move를 제한한다.
+
     // Snake의 방향에 따라 새로운 Head 위치를 계산한다.
     switch (SnakeState.direction) {
         case 'UP':
             nextHead = { x: head.x, y: head.y - 1 };
-            nextBody = [0, -1];
             break;
         case 'DOWN':
             nextHead = { x: head.x, y: head.y + 1 };
-            nextBody = [0, 1];
             break;
         case 'LEFT':
             nextHead = { x: head.x - 1, y: head.y };
-            nextBody = [-1, 0];
             break;
         case 'RIGHT':
             nextHead = { x: head.x + 1, y: head.y };
-            nextBody = [1, 0];
             break;
         default:
             console.error('[moveSnake] Invalid snake direction');
             return; 
     }
-    SnakeState.head.unshift(nextHead); // 새로운 Head를 추가한다.
-    for (let i = SnakeState.body.length - 1; i >= 0; i--) {
-        SnakeState.body[i].x += nextBody[0]; // Body의 위치를 업데이트한다.
-        SnakeState.body[i].y += nextBody[1]; 
+    
+    if (!checkSnakeHeadAndBodyCollision(nextHead, SnakeState.direction)) {
+        console.error('[moveSnake] Snake cannot move in the current direction due to collision with its body');
+        //snake가 몸쪽으로 이동하는 경우, 이전 방향으로 이동한다.
+        // 이전 값을 저장해두는 것이 필요하네요.
+        setNextHeadPositionInPrevStateDirection(SnakeState.prevDirection);
     }
+    let snakeHeadPrevPos = SnakeState.head[0]; // 이전 Head 위치를 저장한다.
+    SnakeState.head.unshift(nextHead); // 새로운 Head를 추가한다.
+
+    // body[0]은 head를 따라가고, body[1]은 body[0]을 따라간다.
+    // 따라서, body[0]의 위치를 다음 Head 위치로 업데이트한다.
+    let snakeBodyNextPos = SnakeState.body[0];
+    for (let i = 0; i < SnakeState.body.length; i++) {
+        if (i === 0) {
+            nextBody = snakeHeadPrevPos; // body[0]은 head를 따라간다.
+        } else {
+            nextBody = snakeBodyNextPos; // body[i]는 body[i-1]을 따라간다.
+        }
+        snakeBodyNextPos = SnakeState.body[i]; // 다음 body[i]를 위해 변경 되기 전, body를 저장한다.
+        SnakeState.body[i] = nextBody;
+    }
+    
+    setSnakePrevDirection(SnakeState.direction); // Snake의 이전 방향을 설정한다.
     
     displayMoveSnake(); // Snake를 다시 그린다.
     
@@ -257,7 +367,7 @@ function displaySnake() {
     // Snake의 Head, Body를 가져온다.
     const snakeHeadPosition = SnakeState.head; // Initial position of the snake head
     const snakeBodyPositions = SnakeState.body; // Initial position of the snake body
-    SnakeState
+    
     // 기존 Snake 초기화
     const cells = gameCanvas.querySelectorAll('.grid-cell');
     cells.forEach(cell => {
@@ -311,12 +421,11 @@ function displayMouse() {
     });
 
     // 먹이 위치를 랜덤으로 설정한다.
+    
     const gridSize = GameState.level === 'EASY' ? GameState.EASY : GameState.level === 'MEDIUM' ? GameState.MEDIUM : GameState.HARD;    
-    const mouseX = Math.floor(Math.random() * gridSize);
-    const mouseY = Math.floor(Math.random() * gridSize);
 
     // 먹이 셀을 찾는다.
-    const mouseCell = cells[mouseY * gridSize + mouseX];
+    const mouseCell = cells[MouseState.position.y * gridSize + MouseState.position.x];
     mouseCell.classList.add('mouse');
     mouseCell.innerHTML = '🐭';
 
@@ -329,7 +438,7 @@ function displayMouse() {
         mouseCell.style.fontSize = '1.0em'; // Hard level, smaller size
     }
 
-    console.log(`[displayMouse] Mouse displayed at position: (${mouseX}, ${mouseY})`);
+    console.log(`[displayMouse] Mouse displayed at position: (${MouseState.position.x}, ${MouseState.position.y})`);
 }
 
 function displayCanvas() {
@@ -432,16 +541,20 @@ function gameOver() {
 // 방향키 이벤트 리스터 추가
 document.addEventListener('keydown', (event) => {
     switch (event.key) {
-        case 'ArrowUp':
+        case 'ArrowUp': // 'w' 키도 UP으로 처리
+        case 'w': // 'w' 키도 UP으로 처리
             SnakeState.direction = 'UP';
             break;
-        case 'ArrowDown':
+        case 'ArrowDown': // 's' 키도 DOWN으로 처리
+        case 's': // 's' 키도 DOWN으로 처리
             SnakeState.direction = 'DOWN';
             break;
-        case 'ArrowLeft':
+        case 'ArrowLeft': // 'a' 키도 LEFT으로 처리
+        case 'a': // 'a' 키도 LEFT으로 처리
             SnakeState.direction = 'LEFT';
             break;
-        case 'ArrowRight':
+        case 'ArrowRight': // 'd' 키도 RIGHT으로 처리
+        case 'd': // 'd' 키도 RIGHT으로 처리
             SnakeState.direction = 'RIGHT';
             break;
         default:

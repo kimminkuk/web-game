@@ -26,6 +26,7 @@ const MouseState = {
     direction: 'RIGHT', // RIGHT, LEFT, UP, DOWN
     nextDirection: 'RIGHT',
     position: { x: 0, y: 0 }, // Initial position of the mouse, Randomly placed
+    speed: 500, // milliseconds between moves
 }
 
 const MouseInitialPosition = {
@@ -202,7 +203,128 @@ function gameStateSetLevel(level) {
 }
 
 function moveMouse() {
+    // 마우스는 랜덤하게 이동하기로 한다.
+    randomDirection = Math.floor(Math.random() * 4); // 0 ~ 3
 
+    checkMouseCollisionWithWall(randomDirection); // 벽에 닿았는지 확인한다.
+
+    checkMouseCollisionWithSnakeBody(randomDirection);
+
+    displayMoveMouse();
+}
+
+function checkMouseCollisionWithWall(randomDirection) {
+    switch (randomDirection) {
+        case 0: // UP
+            MouseState.position.y -= 1;
+            if (MouseState.position.y < 0) {
+                MouseState.position.y = 0; // 벽에 닿으면, 위치를 0으로 설정한다.
+            }
+            break;
+        case 1: // DOWN
+            MouseState.position.y += 1;
+            if (GameState.level === 'EASY' && MouseState.position.y >= GameState.EASY) {
+                MouseState.position.y = GameState.EASY - 1; // 벽에
+            } else if (GameState.level === 'MEDIUM' && MouseState.position.y >= GameState.MEDIUM) {
+                MouseState.position.y = GameState.MEDIUM - 1; // 벽에
+            } else if (GameState.level === 'HARD' && MouseState.position.y >= GameState.HARD) {
+                MouseState.position.y = GameState.HARD - 1; // 벽에 닿으면, 위치를 0으로 설정한다.
+            }
+            break;
+        case 2: // LEFT
+            MouseState.position.x -= 1;
+            if (MouseState.position.x < 0) {
+                MouseState.position.x = 0; // 벽에 닿으면, 위치를
+                // 0으로 설정한다.
+            }
+            break;
+        case 3: // RIGHT
+            MouseState.position.x += 1;
+            if (GameState.level === 'EASY' && MouseState.position.x >= GameState.EASY) {
+                MouseState.position.x = GameState.EASY - 1; // 벽에
+            } else if (GameState.level === 'MEDIUM' && MouseState.position.x >= GameState.MEDIUM) {
+                MouseState.position.x = GameState.MEDIUM - 1; // 벽에
+            }
+            else if (GameState.level === 'HARD' && MouseState.position.x >= GameState.HARD) {
+                MouseState.position.x = GameState.HARD - 1; //
+                // 벽에 닿으면, 위치를 0으로 설정한다.
+            }
+            break;
+        default:
+            console.error('[moveMouse] Invalid random direction');
+            return; // 잘못된 방향인 경우, 함수를 종료한다.
+    }
+}
+
+function checkMouseCollisionWithSnakeBody(randomDirection) {
+    switch (randomDirection) {
+        case 0: // UP
+            for (let i = 0; i < SnakeState.body.length; i++) {
+                if (SnakeState.body[i].x === MouseState.position.x && SnakeState.body[i].y === MouseState.position.y - 1) {
+                    console.error('[checkMouseCollisionWithSnakeBody] Mouse collision with snake body detected in UP direction');
+                    MouseState.position.y += 1; // Mouse가 Snake의 몸에 닿으면, 위치를 아래로 이동한다.
+                    return;
+                }
+            }
+            break;
+        case 1: // DOWN
+            for (let i = 0; i < SnakeState.body.length; i++) {
+                if (SnakeState.body[i].x === MouseState.position.x && SnakeState.body[i].y === MouseState.position.y + 1) {
+                    console.error('[checkMouseCollisionWithSnakeBody] Mouse collision with snake body detected in DOWN direction');
+                    MouseState.position.y -= 1; // Mouse가 Snake의 몸에 닿으면, 위치를 위로 이동한다.
+                    return;
+                }
+            }
+            break;
+        case 2: // LEFT
+            for (let i = 0; i < SnakeState.body.length; i++) {
+                if (SnakeState.body[i].x === MouseState.position.x - 1 && SnakeState.body[i].y === MouseState.position.y) {
+                    console.error('[checkMouseCollisionWithSnakeBody] Mouse collision with snake body detected in LEFT direction');
+                    MouseState.position.x += 1; // Mouse가 Snake의 몸에 닿으면, 위치를 오른쪽으로 이동한다.
+                    return;
+                }
+            }
+            break;
+        case 3: // RIGHT
+            for (let i = 0; i < SnakeState.body.length; i++) {
+                if (SnakeState.body[i].x === MouseState.position.x + 1 && SnakeState.body[i].y === MouseState.position.y) {
+                    console.error('[checkMouseCollisionWithSnakeBody] Mouse collision with snake body detected in RIGHT direction');
+                    MouseState.position.x -= 1; // Mouse가 Snake의 몸에 닿으면, 위치를 왼쪽으로 이동한다.
+                    return;
+                }
+            }
+            break;
+        default:
+            console.error('[checkMouseCollisionWithSnakeBody] Invalid random direction');
+            return; // 잘못된 방향인 경우, 함수를 종료한다.
+    }
+}
+
+function displayMoveMouse() {
+    // Mouse를 다시 그린다.
+    const gameCanvas = document.getElementById('game-canvas');
+    const gridSize = GameState.level === 'EASY' ? GameState.EASY : GameState.level === 'MEDIUM' ? GameState.MEDIUM : GameState.HARD;
+    const cells = gameCanvas.querySelectorAll('.grid-cell');
+    cells.forEach(cell => {
+        cell.classList.remove('mouse');
+        cell.innerHTML = ''; // 먹이 이모티콘 제거
+    });
+
+    // Mouse의 위치를 그린다.
+    const mouseCell = cells[MouseState.position.y * gridSize + MouseState.position.x];
+    mouseCell.classList.add('mouse');
+    mouseCell.innerHTML = '🐭'; // 먹이 이모티콘 추가
+
+    // Mouse 이모티콘 크기가 조금 커서, cells가 어색해짐
+    if (GameState.level === 'EASY') {
+        mouseCell.style.fontSize = '0.7em'; // Easy level, slightly larger
+    } else if (GameState.level === 'MEDIUM') {
+        mouseCell.style.fontSize = '0.8em'; // Medium level, normal size
+    } else if (GameState.level === 'HARD') {
+        mouseCell.style.fontSize = '1.0em'; // Hard level, smaller size
+    }
+
+    console.log(`[displayMoveMouse] Mouse moved to position: ${JSON.stringify(MouseState.position)}`);
 }
 
 function prohibitSnakeNextMove(prevDirection, curDirection) {
@@ -297,6 +419,23 @@ function setNextHeadPositionInPrevStateDirection(direction) {
             return null; // 잘못된 방향인 경우, null을 반환한다.
     }
 }
+
+function snakeAteMouseCheck() {
+    // Snake의 Head가 Mouse의 위치와 겹치는지 확인한다.
+    if (SnakeState.head[0].x === MouseState.position.x && SnakeState.head[0].y === MouseState.position.y) {
+        console.log('[snakeEatMouseCheck] Snake ate the mouse');
+        growSnake(); // Snake를 늘린다.
+        displaySnake(); // Snake를 다시 그린다.
+
+        initializedMousePosition();
+
+        displayMouse(); // Mouse를 다시 그린다.
+        
+        GameState.score += 10; // 점수 증가
+        console.log(`[snakeEatMouseCheck] Score increased to: ${GameState.score}`);
+    }
+}
+
 function moveSnake() {
     const head = SnakeState.head[0]; 
     let nextHead;
@@ -350,6 +489,9 @@ function moveSnake() {
     displayMoveSnake(); // Snake를 다시 그린다.
     
     SnakeDieCheck(); // Snake가 죽었는지 확인한다.
+
+    // Snake가 먹이를 먹었는지 확인한다.
+    snakeAteMouseCheck();
 }
 
 function growSnake() {
@@ -359,6 +501,13 @@ function growSnake() {
     SnakeState.length += 1;
     
     console.log(`[growSnake] Snake grew to length: ${SnakeState.length}`);
+
+    //약간 시간 정지하는 효과를 주기 위해서
+    setTimeout(() => {
+        console.log('[growSnake] Snake growth animation completed');
+        //화면 깜빡임        
+    }, 100); // 100ms 후에 Snake의 성장 애니메이션을 완료한다
+
 }
 
 function displaySnake() {

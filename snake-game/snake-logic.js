@@ -65,7 +65,7 @@ function SnakeDieCheck() {
     }
 
     const head = SnakeState.head[0];
-    
+    console.log('head')
     // 벽에 닿았는지 확인한다.
     if (head.x < 0 || head.x >= rightWallLength || head.y < 0 || head.y >= topLength) {
         console.log('[SnakeDieCheck] Snake died by hitting the wall');
@@ -98,9 +98,9 @@ function initializedMousePosition() {
     }
 
     // top Random position
-    const rowPosition = Math.floor(Math.random() * (topLength)); // 0 ~ topLength-1
+    let rowPosition = Math.floor(Math.random() * (topLength)); // 0 ~ topLength-1
     // head Random position
-    const colPosition = Math.floor(Math.random() * (rightWallLength)); // 0 ~ rightWallLength-1
+    let colPosition = Math.floor(Math.random() * (rightWallLength)); // 0 ~ rightWallLength-1
 
     // Mouse의 위치가 Snake의 위치와 겹치지 않도록 한다.
     // Snake의 위치는 SnakeInitialPosition.head와 SnakeInitialPosition.body에 저장되어 있다.
@@ -256,11 +256,21 @@ function checkMouseCollisionWithWall(randomDirection) {
     }
 }
 
+function getSyncSnakePosition() {
+    // Snake의 현재 위치를 반환한다.
+    // Snake의 위치는 SnakeState.head와 SnakeState.body에 저장되어 있다.
+    return [...SnakeState.body];
+}
+
 function checkMouseCollisionWithSnakeBody(randomDirection) {
+
+    //snake 상태 실시간 체크
+    const snakeBody = getSyncSnakePosition();
+    
     switch (randomDirection) {
         case 0: // UP
-            for (let i = 0; i < SnakeState.body.length; i++) {
-                if (SnakeState.body[i].x === MouseState.position.x && SnakeState.body[i].y === MouseState.position.y - 1) {
+            for (let i = 0; i < snakeBody.length; i++) {
+                if (snakeBody[i].x === MouseState.position.x && snakeBody[i].y === MouseState.position.y - 1) {
                     console.error('[checkMouseCollisionWithSnakeBody] Mouse collision with snake body detected in UP direction');
                     MouseState.position.y += 1; // Mouse가 Snake의 몸에 닿으면, 위치를 아래로 이동한다.
                     return;
@@ -268,8 +278,8 @@ function checkMouseCollisionWithSnakeBody(randomDirection) {
             }
             break;
         case 1: // DOWN
-            for (let i = 0; i < SnakeState.body.length; i++) {
-                if (SnakeState.body[i].x === MouseState.position.x && SnakeState.body[i].y === MouseState.position.y + 1) {
+            for (let i = 0; i < snakeBody.length; i++) {
+                if (snakeBody[i].x === MouseState.position.x && snakeBody[i].y === MouseState.position.y + 1) {
                     console.error('[checkMouseCollisionWithSnakeBody] Mouse collision with snake body detected in DOWN direction');
                     MouseState.position.y -= 1; // Mouse가 Snake의 몸에 닿으면, 위치를 위로 이동한다.
                     return;
@@ -277,8 +287,8 @@ function checkMouseCollisionWithSnakeBody(randomDirection) {
             }
             break;
         case 2: // LEFT
-            for (let i = 0; i < SnakeState.body.length; i++) {
-                if (SnakeState.body[i].x === MouseState.position.x - 1 && SnakeState.body[i].y === MouseState.position.y) {
+            for (let i = 0; i < snakeBody.length; i++) {
+                if (snakeBody[i].x === MouseState.position.x - 1 && snakeBody[i].y === MouseState.position.y) {
                     console.error('[checkMouseCollisionWithSnakeBody] Mouse collision with snake body detected in LEFT direction');
                     MouseState.position.x += 1; // Mouse가 Snake의 몸에 닿으면, 위치를 오른쪽으로 이동한다.
                     return;
@@ -286,8 +296,8 @@ function checkMouseCollisionWithSnakeBody(randomDirection) {
             }
             break;
         case 3: // RIGHT
-            for (let i = 0; i < SnakeState.body.length; i++) {
-                if (SnakeState.body[i].x === MouseState.position.x + 1 && SnakeState.body[i].y === MouseState.position.y) {
+            for (let i = 0; i < snakeBody.length; i++) {
+                if (snakeBody[i].x === MouseState.position.x + 1 && snakeBody[i].y === MouseState.position.y) {
                     console.error('[checkMouseCollisionWithSnakeBody] Mouse collision with snake body detected in RIGHT direction');
                     MouseState.position.x -= 1; // Mouse가 Snake의 몸에 닿으면, 위치를 왼쪽으로 이동한다.
                     return;
@@ -420,11 +430,34 @@ function setNextHeadPositionInPrevStateDirection(direction) {
     }
 }
 
+function animationSnakeEatMouse() {
+    // snake head와 body가 깜빡 이는 효과를 준다.
+
+}
+
+function speedUpSnake() {
+    // Snake의 속도를 증가시킨다.
+    // Snake의 속도는 GameState.snakeSpeed에 저장되어 있다.
+    if (GameState.level === 'EASY') {
+        GameState.snakeSpeed -= 20;
+    } else if (GameState.level === 'MEDIUM') {
+        GameState.snakeSpeed -= 10;
+    } else if (GameState.level === 'HARD') {
+        GameState.snakeSpeed -= 5;
+    } else {
+        console.error('[speedUpSnake] Invalid game level');
+        return;
+    }
+}
+
 function snakeAteMouseCheck() {
     // Snake의 Head가 Mouse의 위치와 겹치는지 확인한다.
     if (SnakeState.head[0].x === MouseState.position.x && SnakeState.head[0].y === MouseState.position.y) {
         console.log('[snakeEatMouseCheck] Snake ate the mouse');
         growSnake(); // Snake를 늘린다.
+        animationSnakeEatMouse(); // Snake가 Mouse를 먹는 애니메이션을 실행한다.
+        speedUpSnake(); // Snake의 속도를 증가시킨다.
+        
         displaySnake(); // Snake를 다시 그린다.
 
         initializedMousePosition();
@@ -486,9 +519,9 @@ function moveSnake() {
     
     setSnakePrevDirection(SnakeState.direction); // Snake의 이전 방향을 설정한다.
     
-    displayMoveSnake(); // Snake를 다시 그린다.
-    
     SnakeDieCheck(); // Snake가 죽었는지 확인한다.
+
+    displayMoveSnake(); // Snake를 다시 그린다.
 
     // Snake가 먹이를 먹었는지 확인한다.
     snakeAteMouseCheck();
@@ -620,33 +653,23 @@ function displayCanvas() {
 function gameStart(level) {
     console.log(`[gameStart] Game started with level: ${level}`);
 
-    // 게임 상태를 초기화한다.
     initializedGame();
-
-    // 게임 난이도 설정
     gameStateSetLevel(level);
-
-    // 화면을 그린다.
-    // 게임화면은 game-canvas에 그린다.
     displayCanvas();
-
-    // 게임 시작 시, Snake의 위치를 초기화한다.
     initializedSnakePosition();
-
-    // Snake를 그린다.
     displaySnake();
-
     initializedMousePosition();
-    // 먹이를 그린다.
     displayMouse();
 
-    snakeIntervalState.intervalId = setInterval(moveSnake, GameState.snakeSpeed);
-    mouseIntervalState.intervalId = setInterval(moveMouse, GameState.mouseSpeed);
-
-    // Snake의 움직임을 시작한다.
-    // setInterval() 함수를 사용하여 Snake의 움직임을 구현한다.
-    // Snake의 움직임은 GameState.speed에 따라 결정된다.
+    gameLoop();
 }
+
+function gameLoop() {
+    moveSnake();
+    moveMouse();
+    setTimeout(gameLoop, Math.min(GameState.snakeSpeed, GameState.mouseSpeed)); // 다음 게임 루프를 설정한다.
+}
+
 function stopGame() {
     clearInterval(snakeIntervalState.intervalId);
     clearInterval(mouseIntervalState.intervalId);

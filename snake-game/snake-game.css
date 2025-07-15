@@ -52,3 +52,8 @@
     background-color: lightyellow;
     /*border-radius: 50%;*/
 }
+
+.blink {
+    background-color: yellow !important; /* 깜빡이는 색상 */
+    transition: background-color 0.1s ease-in-out; /* 부드러운 전환 */
+}

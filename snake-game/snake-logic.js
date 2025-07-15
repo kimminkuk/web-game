@@ -8,6 +8,10 @@ const GameState = {
     mouseSpeed: 500,
 };
 
+const GameLoopState = {
+    timeoutId : null, // 게임 루프를 위한 타임아웃 ID
+}
+
 const SnakeState = {
     direction: 'RIGHT', // RIGHT, LEFT, UP, DOWN
     nextDirection: 'RIGHT',
@@ -26,7 +30,6 @@ const MouseState = {
     direction: 'RIGHT', // RIGHT, LEFT, UP, DOWN
     nextDirection: 'RIGHT',
     position: { x: 0, y: 0 }, // Initial position of the mouse, Randomly placed
-    speed: 500, // milliseconds between moves
 }
 
 const MouseInitialPosition = {
@@ -193,10 +196,10 @@ function gameStateSetLevel(level) {
         GameState.snakeSpeed = 200;
     } else if (level === 'MEDIUM' || level === 'medium') {
         GameState.level = 'MEDIUM';
-        GameState.snakeSpeed = 100;
+        GameState.snakeSpeed = 170;
     } else if (level === 'HARD') {
         GameState.level = 'HARD';
-        GameState.snakeSpeed = 50;
+        GameState.snakeSpeed = 150;
     } else {
         console.error('[gameStateSetLevel] Invalid game level');
     }
@@ -205,7 +208,10 @@ function gameStateSetLevel(level) {
 function moveMouse() {
     // 마우스는 랜덤하게 이동하기로 한다.
     randomDirection = Math.floor(Math.random() * 4); // 0 ~ 3
-
+    if (SnakeState.head[0].x === MouseState.position.x && SnakeState.head[0].y === MouseState.position.y) {
+        console.log('[moveMouse] Mouse is at the same position as Snake head, not moving');
+        return;
+    }
     checkMouseCollisionWithWall(randomDirection); // 벽에 닿았는지 확인한다.
 
     checkMouseCollisionWithSnakeBody(randomDirection);
@@ -432,35 +438,78 @@ function setNextHeadPositionInPrevStateDirection(direction) {
 
 function animationSnakeEatMouse() {
     // snake head와 body가 깜빡 이는 효과를 준다.
+    console.log('[animationSnakeEatMouse] Starting animation');
 
+    if (GameLoopState.timeoutId) {
+        console.log('[animationSnakeEatMouse] Stopping previous game loop');
+        clearTimeout(GameLoopState.timeoutId); // 이전 게임 루프를 중지한다.
+        GameLoopState.timeoutId = null; // 타임아웃 ID를 초기화한다.
+    } else {
+        console.log('[animationSnakeEatMouse] No previous game loop to stop');
+    }
+
+    // const gameCanvas = document.getElementById('game-canvas');
+    // const cells = gameCanvas.querySelectorAll('.grid-cell');
+
+    // let blinkCount = 0;
+    // let blinkCountMax = 6; // 3번 깜빡이기 위해서, 6번 반복한다.
+    // let blinkDurationTime = 1000; // 깜빡이는 시간 간격 (ms)
+    // const blinkInterval = setInterval(() => {
+    //     cells.forEach(cell => {
+    //         if (cell.classList.contains('snake-head') || cell.classList.contains('snake-body')) {
+    //             cell.classList.toggle('blink'); // Snake의 Head와 Body를 깜빡이게 한다.
+    //         }
+    //     });
+    //     blinkCount++;
+    //     if (blinkCount >= blinkCountMax) { // 3번 깜빡이면 애니메이션 종료
+    //         clearInterval(blinkInterval);
+    //         cells.forEach(cell => {
+    //             cell.classList.remove('blink'); // 깜빡임 효과 제거
+    //         });
+    //         console.log('[animationSnakeEatMouse] Animation completed');
+    //         if (GameLoopState.timeoutId === null) {
+    //             GameLoopState.timeoutId = setTimeout(gameLoop, GameState.snakeSpeed); // 게임 루프 재시작
+    //         }            
+    //     }
+    // }, blinkDurationTime);
 }
 
 function speedUpSnake() {
     // Snake의 속도를 증가시킨다.
     // Snake의 속도는 GameState.snakeSpeed에 저장되어 있다.
     if (GameState.level === 'EASY') {
-        GameState.snakeSpeed -= 20;
-    } else if (GameState.level === 'MEDIUM') {
         GameState.snakeSpeed -= 10;
+    } else if (GameState.level === 'MEDIUM') {
+        GameState.snakeSpeed -= 13;
     } else if (GameState.level === 'HARD') {
-        GameState.snakeSpeed -= 5;
+        GameState.snakeSpeed -= 15;
     } else {
         console.error('[speedUpSnake] Invalid game level');
         return;
     }
 }
 
+function getSyncMousePosition() {
+    return {...MouseState.position}; // Mouse의 현재 위치를 반환한다.
+}
+
 function snakeAteMouseCheck() {
+
+    const mousePositionSync = getSyncMousePosition();
+
     // Snake의 Head가 Mouse의 위치와 겹치는지 확인한다.
-    if (SnakeState.head[0].x === MouseState.position.x && SnakeState.head[0].y === MouseState.position.y) {
+    if (SnakeState.head[0].x === mousePositionSync.x && SnakeState.head[0].y === mousePositionSync.y) {
         console.log('[snakeEatMouseCheck] Snake ate the mouse');
+        
         growSnake(); // Snake를 늘린다.
+
         animationSnakeEatMouse(); // Snake가 Mouse를 먹는 애니메이션을 실행한다.
+
         speedUpSnake(); // Snake의 속도를 증가시킨다.
         
         displaySnake(); // Snake를 다시 그린다.
 
-        initializedMousePosition();
+        initializedMousePosition(); // Mouse의 위치를 초기화한다.
 
         displayMouse(); // Mouse를 다시 그린다.
         
@@ -667,7 +716,7 @@ function gameStart(level) {
 function gameLoop() {
     moveSnake();
     moveMouse();
-    setTimeout(gameLoop, Math.min(GameState.snakeSpeed, GameState.mouseSpeed)); // 다음 게임 루프를 설정한다.
+    GameLoopState.timeoutId = setTimeout(gameLoop, Math.min(GameState.snakeSpeed, GameState.mouseSpeed)); // 다음 게임 루프를 설정한다.
 }
 
 function stopGame() {

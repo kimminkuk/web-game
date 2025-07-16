@@ -10,6 +10,7 @@ const GameState = {
 
 const GameLoopState = {
     timeoutId : null, // 게임 루프를 위한 타임아웃 ID
+    isRunning: false, // 게임 루프가 실행 중인지 여부3
 }
 
 const SnakeState = {
@@ -177,6 +178,9 @@ function initializedGame() {
     SnakeState.length = 3;
     SnakeState.head = [{ x: 3, y: 0 }]; // Initial position of the snake head, Randomly placed
     SnakeState.body = [{ x: 2, y: 0 }, { x: 1, y: 0 }]; // Initial position of the snake, Randomly placed
+
+    GameLoopState.timeoutId = null; // 게임 루프를 위한 타임아웃 ID
+    GameLoopState.isRunning = true; // 게임 루프가 실행 중인지 여부
 }
 
 function gameStateSetLevel(level) {
@@ -444,34 +448,40 @@ function animationSnakeEatMouse() {
         console.log('[animationSnakeEatMouse] Stopping previous game loop');
         clearTimeout(GameLoopState.timeoutId); // 이전 게임 루프를 중지한다.
         GameLoopState.timeoutId = null; // 타임아웃 ID를 초기화한다.
+        GameLoopState.isRunning = false; // 게임 루프 상태를 업데이트한다.
     } else {
         console.log('[animationSnakeEatMouse] No previous game loop to stop');
     }
 
-    // const gameCanvas = document.getElementById('game-canvas');
-    // const cells = gameCanvas.querySelectorAll('.grid-cell');
+    const gameCanvas = document.getElementById('game-canvas');
+    const cells = gameCanvas.querySelectorAll('.grid-cell');
 
-    // let blinkCount = 0;
-    // let blinkCountMax = 6; // 3번 깜빡이기 위해서, 6번 반복한다.
-    // let blinkDurationTime = 1000; // 깜빡이는 시간 간격 (ms)
-    // const blinkInterval = setInterval(() => {
-    //     cells.forEach(cell => {
-    //         if (cell.classList.contains('snake-head') || cell.classList.contains('snake-body')) {
-    //             cell.classList.toggle('blink'); // Snake의 Head와 Body를 깜빡이게 한다.
-    //         }
-    //     });
-    //     blinkCount++;
-    //     if (blinkCount >= blinkCountMax) { // 3번 깜빡이면 애니메이션 종료
-    //         clearInterval(blinkInterval);
-    //         cells.forEach(cell => {
-    //             cell.classList.remove('blink'); // 깜빡임 효과 제거
-    //         });
-    //         console.log('[animationSnakeEatMouse] Animation completed');
-    //         if (GameLoopState.timeoutId === null) {
-    //             GameLoopState.timeoutId = setTimeout(gameLoop, GameState.snakeSpeed); // 게임 루프 재시작
-    //         }            
-    //     }
-    // }, blinkDurationTime);
+    let blinkCount = 0;
+    let blinkCountMax = 6; // 3번 깜빡이기 위해서, 6번 반복한다.
+    let blinkDurationTime = 100; // 깜빡이는 시간 간격 (ms)
+    const blinkInterval = setInterval(() => {
+        cells.forEach(cell => {
+            if (cell.classList.contains('snake-head') || cell.classList.contains('snake-body')) {
+                cell.classList.toggle('blink'); // Snake의 Head와 Body를 깜빡이게 한다.
+            }
+        });
+        blinkCount++;
+        if (blinkCount >= blinkCountMax) { // 3번 깜빡이면 애니메이션 종료
+            clearInterval(blinkInterval);
+            cells.forEach(cell => {
+                cell.classList.remove('blink'); // 깜빡임 효과 제거
+            });
+            console.log('[animationSnakeEatMouse] Animation completed');
+            restartGameLoop();
+        }
+    }, blinkDurationTime);
+}
+
+function restartGameLoop() {
+    if (!GameLoopState.isRunning) {
+        GameLoopState.isRunning = true; // 게임 루프 상태를 업데이트한다.
+        GameLoopState.timeoutId = setTimeout(gameLoop, Math.min(GameState.snakeSpeed, GameState.mouseSpeed)); // 게임 루프 재시작
+    }         
 }
 
 function speedUpSnake() {
@@ -714,6 +724,8 @@ function gameStart(level) {
 }
 
 function gameLoop() {
+    if (!GameLoopState.isRunning) return;
+
     moveSnake();
     moveMouse();
     GameLoopState.timeoutId = setTimeout(gameLoop, Math.min(GameState.snakeSpeed, GameState.mouseSpeed)); // 다음 게임 루프를 설정한다.
